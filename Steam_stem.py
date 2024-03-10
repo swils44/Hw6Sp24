@@ -46,8 +46,8 @@ class steam():
         #3. find all unknown thermodynamic properties by interpolation from appropriate steam table
 
         #read in the thermodynamic data from files
-        ts, ps, hfs, hgs, sfs, sgs, vfs, vgs= #$JES MISSING CODE HERE$# #use np.loadtxt to read the saturated properties
-        tcol, hcol, scol, pcol = #$JES MISSING CODE HERE$# #use np.loadtxt to read the superheated properties
+        ts, ps, hfs, hgs, sfs, sgs, vfs, vgs= np.loadtxt('sat_water_table.txt',  skiprows=1, unpack=True) #use np.loadtxt to read the saturated properties
+        tcol, hcol, scol, pcol = np.loadtxt('superheated_water_table.txt', skiprows=1, unpack=True) #use np.loadtxt to read the superheated properties
 
         R=8.314/(18/1000) #ideal gas constant for water [J/(mol K)]/[kg/mol]
         Pbar=self.p/100 #pressure in bar - 1bar=100kPa roughly
@@ -68,8 +68,8 @@ class steam():
         if self.T is not None:
             if self.T>Tsat: #interpolate with griddata
                 self.region='Superheated'
-                self.h = #$JES MISSING CODE HERE$  #use griddata to interpolate with T & P the superheated table
-                self.s = #$JES MISSING CODE HERE$  #use griddata to interpolate with T & P the superheated table
+                self.h = float(griddata((tcol, pcol), hcol, (self.T, self.p))) #use griddata to interpolate with T & P the superheated table
+                self.s = float(griddata((tcol, pcol), scol, (self.T, self.p)))  #use griddata to interpolate with T & P the superheated table
                 self.x=1.0
                 TK = self.T + 273.14  # temperature conversion to Kelvin
                 self.v=R*TK/(self.p*1000)  #ideal gas approximation for volume
@@ -88,8 +88,8 @@ class steam():
                 self.v=vf+self.x*(vg-vf)
             else: #interpolate with griddata
                 self.region='Superheated'
-                self.T = #$JES MISSING CODE HERE$  #use griddata to interpolate with h & P the superheated table
-                self.s = #$JES MISSING CODE HERE$  #use griddata to interpolate with h & P the superheated table
+                self.T = float(griddata((hcol, pcol), tcol, (self.h, self.p)))  #use griddata to interpolate with h & P the superheated table
+                self.s = float(griddata((scol, pcol), tcol, (self.s, self.p)))  #use griddata to interpolate with h & P the superheated table
         elif self.s!=None:
             self.x=(self.s-sf)/(sg-sf)
             if self.x<=1.0: #manual interpolation
@@ -99,8 +99,8 @@ class steam():
                 self.v=vf+self.x*(vg-vf)
             else: #interpolate with griddata
                 self.region = 'Superheated'
-                self.T = #$JES MISSING CODE HERE$  #use griddata to interpolate with s & P the superheated table
-                self.h = #$JES MISSING CODE HERE$  #use griddata to interpolate with s & P the superheated table
+                self.T = float(griddata((tcol, pcol), hcol, (self.T, self.p)))  #use griddata to interpolate with s & P the superheated table
+                self.h = float(griddata((tcol, pcol), scol, (self.T, self.p)))  #use griddata to interpolate with s & P the superheated table
         #endregion
 
     def print(self):
