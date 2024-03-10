@@ -48,6 +48,7 @@ class ResistorNetwork():
                 LineNum = self.MakeLoop(LineNum, FileTxt)
             LineNum+=1
         pass
+        #print(f'Number of loops:{len(self.Loops)}')
 
     def MakeResistor(self, N, Txt):
         """
@@ -56,17 +57,19 @@ class ResistorNetwork():
         :param Txt: [string] the lines of the text file
         :return: a resistor object
         """
-        R = #JES MISSING CODE  # instantiate a new resistor object
+        R = Resistor()  # instantiate a new resistor object
         N += 1  # <Resistor> was detected, so move to next line in Txt
-        txt = #JES MISSING code  # retrieve line from Txt and make it lower case using Txt[N].lower()
+        txt = Txt[N].lower().strip()  # retrieve line from Txt and make it lower case using Txt[N].lower()
         while "resistor" not in txt:
             if "name" in txt:
-                R.Name = #JES MISSING CODE
+                R.Name = txt.split('=')[1].strip()
             if "resistance" in txt:
-                R.Resistance = #JES MISSING CODE
+                R.Resistance = float(txt.split('=')[1].strip())
             N+=1
-            txt=Txt[N].lower()
-
+            if N < len(Txt): #preventing going outside the list index
+                txt=Txt[N].lower()
+            else:
+                break
         self.Resistors.append(R)  # append the resistor object to the list of resistors
         return N
 
@@ -123,7 +126,7 @@ class ResistorNetwork():
         :return: a list of the currents in the resistor network
         """
         # need to set the currents to that Kirchoff's laws are satisfied
-        i0 = #JES MISSING CODE  #define an initial guess for the currents in the circuit
+        i0 = [0.1, 0.1, 0.1] #define an initial guess for the currents in the circuit
         i = fsolve(self.GetKirchoffVals,i0)
         # print output to the screen
         print("I1 = {:0.1f}".format(i[0]))
@@ -187,6 +190,7 @@ class ResistorNetwork():
                     name = L.Nodes[n]+L.Nodes[n+1]
                 loopDeltaV += self.GetElementDeltaV(name)
             loopVoltages.append(loopDeltaV)
+            # print(f"Voltages:{loopVoltages}") #debug notes
         return loopVoltages
 
     def GetResistorByName(self, name):
@@ -197,6 +201,7 @@ class ResistorNetwork():
         """
         for r in self.Resistors:
             if r.Name == name:
+                # print(f"Resistances:{r.Name}") # debug to make sure I am capturing all the resistance nodes
                 return r
     #endregion
 
@@ -218,9 +223,9 @@ class Resistor():
         :param i: current in amps
         :param name: name of resistor by alphabetically ordered pair of node names
         """
-        #JES Missing Code = R
-        #JES Missing Code = i
-        #JES Missing Code = name
+        self.Resistance = R
+        self.Current = i
+        self.Name = name
     #endregion
 
     #region methods/functions
@@ -253,9 +258,11 @@ def main():
     This program solves for the unknown currents in the circuit of the homework assignment.
     :return: nothing
     """
-    Net =  # JES MISSING CODE  #Instantiate a resistor network object
-    Net.  # JES MISSING CODE #call the function from Net that builds the resistor network from a text file
+    Net = ResistorNetwork()  #Instantiate a resistor network object
+    Net.BuildNetworkFromFile('ResistorNetwork.txt')
+    #Net.BuildNetworkFromFile('ResistorNetwork_2.txt') #call the function from Net that builds the resistor network from a text file
     IVals = Net.AnalyzeCircuit()
+    print(f"Calculated I:{IVals} A")
 # endregion
 
 # region function calls
