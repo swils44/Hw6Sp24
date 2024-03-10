@@ -40,21 +40,26 @@ class ResistorNetwork2(ResistorNetwork):
         # set current in resistors in the top loop
         self.GetResistorByName('ad').Current = i[0]  # I_1 in diagram
         self.GetResistorByName('bc').Current = i[1]  # I_2 in diagram
-        self.GetResistorByName('cd').Current = i[2]  # I_3 in diagram
 
         # set current in resistors in the bottom loop
         self.GetResistorByName('ce').Current = i[3]  # I_4 in diagram
         self.GetResistorByName('de').Current = i[4]  # I_5 in diagram
 
+        # calculate current through resistor 'cd'
+        self.GetResistorByName('cd').Current = i[0] - i[3]  # I_1 - I_4 in diagram
+
         # calculate net current into node c
-        Node_c_Current = sum([i[1], -i[2], -i[3]])
+        Node_c_Current = sum([i[1], -(i[0] - i[3]), -i[3]])
 
         # calculate net current into node d
-        Node_d_Current = sum([i[0], i[2], -i[4]])
+        Node_d_Current = sum([i[0], (i[0] - i[3]), -i[4]])
+
+        I_cd = i[0] - i[3]  # I_1 - I_4 in diagram
 
         KVL = self.GetLoopVoltageDrops()  # two equations here
         KVL.append(Node_c_Current)  # one equation here
         KVL.append(Node_d_Current)  # one equation here
+        KVL.append(I_cd-i[2])
         return KVL
 
 def main():
