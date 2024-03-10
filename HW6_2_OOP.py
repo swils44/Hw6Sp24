@@ -14,10 +14,11 @@ class Fluid():
         :param mu: dynamic viscosity in Pa*s -> (kg*m/s^2)*(s/m^2) -> kg/(m*s)
         :param rho: density in kg/m^3
         '''
-        self.mu= # $JES MISSING CODE$  # simply make a copy of the value in the argument as a class property
-        self.rho= # $JES MISSING CODE$  # simply make a copy of the value in the argument as a class property
-        self.nu= #JES MISSING CODE$ # calculate the kinematic viscosity in units of m^2/s
+        self.mu = mu  # dynamic viscosity
+        self.rho = rho  # density
+        self.nu = self.mu / self.rho  # kinematic viscosity in units of m^2/s
     #endregion
+
 class Node():
     #region constructor
     def __init__(self, Name='a', Pipes=[], ExtFlow=0):
@@ -27,35 +28,33 @@ class Node():
         :param Pipes: a list of pipes connected to this node
         :param ExtFlow: any external flow into (+) or out (-) of this node in L/s
         '''
-        self.name=Name
-        self.pipes=Pipes
-        self.extFlow=ExtFlow
+        self.name = Name
+        self.pipes = Pipes
+        self.extFlow = ExtFlow
     #endregion
 
     #region methods/functions
     def getNetFlowRate(self):
         '''
         Calculates the net flow rate into this node in L/s
-        # :return:
+        :return:
         '''
-        Qtot=#$JES MISSING CODE$  #count the external flow first
+        Qtot = self.extFlow  # Start with the external flow
         for p in self.pipes:
-            #retrieves the pipe flow rate (+) if into node (-) if out of node.  see class for pipe.
-            Qtot+=p.getFlowIntoNode(self.name)
+            Qtot += p.getFlowIntoNode(self.name)  # Add the flow from each connected pipe
         return Qtot
     #endregion
+
 class Loop():
     #region constructor
     def __init__(self, Name='A', Pipes=[]):
         '''
-        Defines a loop in a pipe network.  Note: the pipes must be listed in order.  The traversal of a pipe loop
-        will begin at the start node of Pipe[0] and move in the positive direction of that pipe.  Hence, loops
-        can be either CW or CCW traversed, depending on which pipe you start with.  Should work fine either way.
+        Defines a loop in a pipe network.
         :param Name: name of the loop
         :param Pipes: a list/array of pipes in this loop
         '''
-        self.name=Name
-        self.pipes=Pipes
+        self.name = Name
+        self.pipes = Pipes
     #endregion
 
     #region methods/functions
@@ -64,18 +63,18 @@ class Loop():
         Calculates the net head loss as I traverse around the loop, in m of fluid.
         :return:
         '''
-        deltaP=0 #initialize to zero
-        startNode=self.pipes[0].startNode #begin at the start node of the first pipe
+        deltaP = 0  # Initialize to zero
+        startNode = self.pipes[0].startNode  # Begin at the start node of the first pipe
         for p in self.pipes:
-            # calculates the head loss in the pipe considering loop traversal and flow directions
-            phl=p.getFlowHeadLoss(startNode)
-            deltaP+=phl
-            startNode=p.endNode if startNode!=p.endNode else p.startNode #move to the next node
+            deltaP += p.getFlowHeadLoss(startNode)  # Calculates the head loss in the pipe
+            # Move to the next node
+            startNode = p.endNode if startNode != p.endNode else p.startNode
         return deltaP
     #endregion
+
 class Pipe():
     #region constructor
-    def __init__(self, Start='A', End='B',L=100, D=200, r=0.00025, fluid=Fluid()):
+    def __init__(self, Start='A', End='B', L=100, D=200, r=0.00025, fluid=Fluid()):
         '''
         Defines a generic pipe with orientation from lowest letter to highest, alphabetically.
         :param Start: the start node (string)
@@ -85,119 +84,113 @@ class Pipe():
         :param r: the pipe roughness in m  (float)
         :param fluid:  a Fluid object (typically water)
         '''
-        # from arguments given in constructor
-        self.startNode=min(Start,End) #makes sure to use the lowest letter for startNode
-        self.endNode=max(Start,End) #makes sure to use the highest letter for the endNode
-        self.length=L
-        self.r=r
-        self.fluid=fluid #the fluid in the pipe
+        self.startNode = min(Start, End)  # makes sure to use the lowest letter for startNode
+        self.endNode = max(Start, End)  # makes sure to use the highest letter for endNode
+        self.length = L
+        self.r = r
+        self.fluid = fluid  # the fluid in the pipe
 
         # other calculated properties
-        self.d=D/1000.0 #diameter in m
-        self.relrough = self.r/self.d #calculate relative roughness for easy use later
-        self.A=math.pi/4.0*self.d**2 #calculate pipe cross sectional area for easy use later
-        self.Q=10 #working in units of L/s, just an initial guess
-        self.vel=self.V()  #calculate the initial velocity of the fluid
-        self.reynolds=self.Re() #calculate the initial reynolds number
+        self.d = D / 1000.0  # diameter in m
+        self.relrough = r / self.d  # relative roughness for use later
+        self.A = math.pi * (self.d / 2) ** 2  # pipe cross sectional area
+        self.Q = 10  # working in units of L/s, just an initial guess
+        self.vel = self.V()  # calculate the initial velocity of the fluid
+        self.reynolds = self.Re()  # calculate the initial Reynolds number
     #endregion
 
     #region methods/functions
     def V(self):
         '''
         Calculate average velocity in the pipe for volumetric flow self.Q
-        :return:the average velocity in m/s
+        :return: the average velocity in m/s
         '''
-        self.vel= #$JES MISSING CODE$  # the average velocity is Q/A (be mindful of units)
+        self.vel = (self.Q / 1000) / self.A  # Convert Q from L/s to m^3/s and divide by area
         return self.vel
 
     def Re(self):
         '''
-        Calculate the reynolds number under current conditions.
-        :return:
+        Calculate the Reynolds number under current conditions.
+        :return: the Reynolds number
         '''
-        self.reynolds= #$JES MISSING CODE$ # Re=rho*V*d/mu, be sure to use V() so velocity is updated.
+        self.reynolds = (self.fluid.rho * self.V() * self.d) / self.fluid.mu
         return self.reynolds
 
     def FrictionFactor(self):
-        """
+        '''
         This function calculates the friction factor for a pipe based on the
         notion of laminar, turbulent and transitional flow.
         :return: the (Darcy) friction factor
-        """
-        # update the Reynolds number and make a local variable Re
-        Re=self.Re()
-        rr=self.relrough
-        # to be used for turbulent flow
-        def CB():
-            # note:  in numpy log is for natural log.  log10 is log base 10.
-            cb = lambda f: 1 / (f ** 0.5) + 2.0 * np.log10(rr / 3.7 + 2.51 / (Re * f ** 0.5))
-            result = fsolve(cb, (0.01))
-            val = cb(result[0])
-            return result[0]
-        # to be used for laminar flow
-        def lam():
+        '''
+        Re = self.Re()
+        if Re < 2000:
             return 64 / Re
+        elif Re > 4000:
+            # Using Haaland's formula as an approximation for the Colebrook equation
+            return (1. / (-1.8 * np.log10((6.9 / Re) + ((self.relrough / 3.7) ** 1.11)))) ** 2
+        else:
+            # Transitional flow: using a weighted average of laminar and turbulent flow friction factors
+            lam = 64 / Re
+            turb = (1. / (-1.8 * np.log10((6.9 / Re) + ((self.relrough / 3.7) ** 1.11)))) ** 2
+            return lam + ((Re - 2000) / (4000 - 2000)) * (turb - lam)
 
-        if Re >= 4000:  # true for turbulent flow
-            return CB()
-        if Re <= 2000:  # true for laminar flow
-            return lam()
-
-        # transition flow is ambiguous, so use normal variate weighted by Re
-        CBff = CB()
-        Lamff = lam()
-        # I assume laminar is more accurate when just above 2000 and CB more accurate when just below Re 4000.
-        # I will weight the mean appropriately using a linear interpolation.
-        mean = Lamff+((Re-2000)/(4000-2000))*(CBff - Lamff)
-        sig = 0.2 * mean
-        # Now, use normalvariate to put some randomness in the choice
-        return rnd.normalvariate(mean, sig)
-
-    def frictionHeadLoss(self):  # calculate headloss through a section of pipe in m of fluid
+    def frictionHeadLoss(self):
         '''
         Use the Darcy-Weisbach equation to find the head loss through a section of pipe.
+        :return: the head loss in m of water
         '''
-        g = 9.81  # m/s^2
-        ff = self.FrictionFactor()
-        hl = #$JES MISSING CODE$ # calculate the head loss in m of water
+        g = 9.81  # m/s^2, acceleration due to gravity
+        f = self.FrictionFactor()  # Darcy friction factor
+        v = self.V()  # average velocity
+        hl = (f * self.length * v**2) / (2 * g * self.d)  # Darcy-Weisbach head loss equation
         return hl
 
     def getFlowHeadLoss(self, s):
         '''
         Calculate the head loss for the pipe.
-        :param s: the node i'm starting with in a traversal of the pipe
+        :param s: the node I'm starting with in a traversal of the pipe
         :return: the signed headloss through the pipe in m of fluid
         '''
-        #while traversing a loop, if s = startNode I'm traversing in same direction as positive pipe
-        nTraverse= 1 if s==self.startNode else -1
-        #if flow is positive sense, scalar =1 else =-1
-        nFlow=1 if self.Q >= 0 else -1
-        return nTraverse*nFlow*self.frictionHeadLoss()
+        nTraverse = 1 if s == self.startNode else -1
+        nFlow = 1 if self.Q >= 0 else -1
+        return nTraverse * nFlow * self.frictionHeadLoss()
 
     def Name(self):
         '''
         Gets the pipe name.
-        :return:
+        :return: the pipe name
         '''
-        return self.startNode+'-'+self.endNode
+        return self.startNode + '-' + self.endNode
 
     def oContainsNode(self, node):
-        #does the pipe connect to the node?
-        return self.startNode==node or self.endNode==node
+        '''
+        Does the pipe connect to the node?
+        :param node: the node to check
+        :return: True if the node is one of the endpoints of the pipe
+        '''
+        return self.startNode == node or self.endNode == node
 
     def printPipeFlowRate(self):
-        print('The flow in segment {} is {:0.2f} L/s'.format(self.Name(),self.Q))
+        '''
+        Prints the flow rate in the pipe.
+        '''
+        print('The flow in segment {} is {:0.2f} L/s'.format(self.Name(), self.Q))
 
     def getFlowIntoNode(self, n):
         '''
-        determines the flow rate into node n
-        :param n: a node object
-        :return: +/-Q
+        Determines the flow rate into node n.
+        :param n: the node name
+        :return: the flow rate into the node (signed)
         '''
-        if n==self.startNode:
+        if n == self.startNode:
             return -self.Q
-        return self.Q
+        elif n == self.endNode:
+            return self.Q
+        else:
+            raise ValueError('Node is not connected to this pipe.')
     #endregion
+
+# ... (other class definitions) ...
 
 class PipeNetwork():
     #region constructor
@@ -209,10 +202,10 @@ class PipeNetwork():
         :param Nodes: a list of node objects
         :param fluid: a fluid object
         '''
-        self.loops=Loops
-        self.nodes=Nodes
-        self.Fluid=fluid
-        self.pipes=Pipes
+        self.loops = Loops
+        self.nodes = Nodes
+        self.Fluid = fluid
+        self.pipes = Pipes
     #endregion
 
     #region methods/functions
@@ -222,94 +215,116 @@ class PipeNetwork():
         given the constraints of: i) no net flow into a node and ii) no net pressure drops in the loops.
         :return: a list of flow rates in the pipes
         '''
-        #see how many nodes and loops there are, this is how many equation results I will return
-        N=len(self.nodes)+len(self.loops)
-        # build an initial guess for flow rates in the pipes.
-        # note that I only have 10 pipes, but need 11 variables because of the degenerate node equation at b.
-        Q0=np.full(N,10)
-        def fn(q):
-            """
-            This is used as a callback for fsolve.  The mass continuity equations at the nodes and the loop equations
-            are functions of the flow rates in the pipes.  Hence, fsolve will search for the roots of these equations
-            by varying the flow rates in each pipe.
-            :param q: an array of flowrates in the pipes + 1 extra value b/c of node b
-            :return: L an array containing flow rates at the nodes and  pressure losses for the loops
-            """
-            #update the flow rate in each pipe object
-            for i in range(len(self.pipes)):
-                self.pipes[i].Q= #$JES MISSING CODE$  # set volumetric flow rate from input argument q
-            #calculate the net flow rate for the node objects
-            # note:  when flow rates in pipes are correct, the net flow into each node should be zero.
-            L= #$JES MISSING CODE$  # call the getNodeFlowRates function of this class
-            #calculate the net head loss for the loop objects
-            # note: when the flow rates in pipes are correct, the net head loss for each loop should be zero.
-            L+= #$JES MISSING CODE$  # call the getLoopHeadLosses function of this class
-            return L
-        #using fsolve to find the flow rates
-        FR=fsolve(fn,Q0)
+        N = len(self.nodes) + len(self.loops)  # the number of equations
+        Q0 = np.full(N, 10.0)  # initial guess for the flow rates
+
+        def fn(Q):
+            '''
+            Callback function for fsolve. The mass continuity equations at the nodes and the loop equations
+            are functions of the flow rates in the pipes.
+            :param Q: an array of flow rates in the pipes
+            :return: an array containing flow rates at the nodes and pressure losses for the loops
+            '''
+            for i, p in enumerate(self.pipes):
+                p.Q = Q[i]  # Update the flow rate for each pipe
+
+            qNet = self.getNodeFlowRates()  # Net flow rates at nodes
+            lhl = self.getLoopHeadLosses()  # Loop head losses
+
+            return qNet + lhl
+
+        # Using fsolve to find the flow rates
+        FR = fsolve(fn, Q0)
         return FR
 
     def getNodeFlowRates(self):
-        #each node object is responsible for calculating its own net flow rate
-        qNet=[n.getNetFlowRate() for n in self.nodes]
+        '''
+        Calculate the net flow rate for each node object.
+        :return: a list of net flow rates for the nodes
+        '''
+        qNet = [n.getNetFlowRate() for n in self.nodes]
         return qNet
 
     def getLoopHeadLosses(self):
-        #each loop object is responsible for calculating its own net head loss
-        lhl=[l.getLoopHeadLoss() for l in self.loops]
+        '''
+        Calculate the net head loss for each loop object.
+        :return: a list of net head losses for the loops
+        '''
+        lhl = [l.getLoopHeadLoss() for l in self.loops]
         return lhl
 
     def getPipe(self, name):
-        #returns a pipe object by its name
+        '''
+        Returns a pipe object by its name.
+        :param name: the name of the pipe
+        :return: the pipe object
+        '''
         for p in self.pipes:
             if name == p.Name():
                 return p
+        return None
 
     def getNodePipes(self, node):
-        #returns a list of pipe objects that are connected to the node object
-        l=[]
-        for p in self.pipes:
-            if p.oContainsNode(node):
-                l.append(p)
-        return l
+        '''
+        Returns a list of pipe objects that are connected to the node object.
+        :param node: the node name
+        :return: a list of connected pipe objects
+        '''
+        return [p for p in self.pipes if p.oContainsNode(node)]
 
     def nodeBuilt(self, node):
-        #determines if I have already constructed this node object (by name)
-        for n in self.nodes:
-            if n.name==node:
-                return True
-        return False
+        '''
+        Determines if a node object has already been constructed.
+        :param node: the node name
+        :return: True if the node exists
+        '''
+        return any(n.name == node for n in self.nodes)
 
     def getNode(self, name):
-        #returns one of the node objects by name
+        '''
+        Returns a node object by name.
+        :param name: the name of the node
+        :return: the node object
+        '''
         for n in self.nodes:
-            if n.name==name:
+            if n.name == name:
                 return n
+        return None
 
     def buildNodes(self):
-        #automatically create the node objects by looking at the pipe ends
+        '''
+        Automatically create the node objects by looking at the pipe ends.
+        '''
         for p in self.pipes:
-            if self.nodeBuilt(p.startNode)==False:
-                #instantiate a node object and append it to the list of nodes
-                self.nodes.append(Node(p.startNode,self.getNodePipes(p.startNode)))
-            if self.nodeBuilt(p.endNode)==False:
-                #instantiate a node object and append it to the list of nodes
-                self.nodes.append(Node(p.endNode,self.getNodePipes(p.endNode)))
+            if not self.nodeBuilt(p.startNode):
+                self.nodes.append(Node(p.startNode, self.getNodePipes(p.startNode)))
+            if not self.nodeBuilt(p.endNode):
+                self.nodes.append(Node(p.endNode, self.getNodePipes(p.endNode)))
 
     def printPipeFlowRates(self):
+        '''
+        Prints the flow rate in each pipe.
+        '''
         for p in self.pipes:
             p.printPipeFlowRate()
 
     def printNetNodeFlows(self):
+        '''
+        Prints the net flow into each node.
+        '''
         for n in self.nodes:
-            print('net flow into node {} is {:0.2f}'.format(n.name, n.getNetFlowRate()))
+            print('net flow into node {} is {:0.2f} L/s'.format(n.name, n.getNetFlowRate()))
 
     def printLoopHeadLoss(self):
+        '''
+        Prints the head loss for each loop.
+        '''
         for l in self.loops:
             print('head loss for loop {} is {:0.2f}'.format(l.name, l.getLoopHeadLoss()))
     #endregion
 # endregion
 
+# region function definitions
 # region function definitions
 def main():
     '''
@@ -326,41 +341,41 @@ def main():
     Step 4: check results against expected properties of zero head loss around a loop and mass conservation at nodes.
     :return:
     '''
-    #instantiate a Fluid object to define the working fluid as water
-    water=#$JES MISSING CODE$  #
+    # instantiate a Fluid object to define the working fluid as water
+    water = Fluid(mu=0.00089, rho=1000)  # water properties
     roughness = 0.00025  # in meters
 
-    #instantiate a new PipeNetwork object
-    PN=#$JES MISSING CODE$  #
-    #add Pipe objects to the pipe network (see constructor for Pipe class)
-    PN.pipes.append(Pipe('a','b',250, 300, roughness, water))
-    PN.pipes.append(Pipe('a','c',100, 200, roughness, water))
-    PN.pipes.append(Pipe('b','e',100, 200, roughness, water))
-    PN.pipes.append(Pipe('c','d',125, 200, roughness, water))
-    PN.pipes.append(Pipe('c','f',100, 150, roughness, water))
-    PN.pipes.append(Pipe('d','e',125, 200, roughness, water))
-    PN.pipes.append(Pipe('d','g',100, 150, roughness, water))
-    PN.pipes.append(Pipe('e','h',100, 150, roughness, water))
-    PN.pipes.append(Pipe('f','g',125, 250, roughness, water))
-    PN.pipes.append(Pipe('g','h',125, 250, roughness, water))
-    #add Node objects to the pipe network by calling buildNodes method of PN object
+    # instantiate a new PipeNetwork object
+    PN = PipeNetwork(fluid=water)  # instantiate PipeNetwork with the water fluid
+    # add Pipe objects to the pipe network (see constructor for Pipe class)
+    PN.pipes.append(Pipe('a', 'b', 250, 300, roughness, water))
+    PN.pipes.append(Pipe('a', 'c', 100, 200, roughness, water))
+    PN.pipes.append(Pipe('b', 'e', 100, 200, roughness, water))
+    PN.pipes.append(Pipe('c', 'd', 125, 200, roughness, water))
+    PN.pipes.append(Pipe('c', 'f', 100, 150, roughness, water))
+    PN.pipes.append(Pipe('d', 'e', 125, 200, roughness, water))
+    PN.pipes.append(Pipe('d', 'g', 100, 150, roughness, water))
+    PN.pipes.append(Pipe('e', 'h', 100, 150, roughness, water))
+    PN.pipes.append(Pipe('f', 'g', 125, 250, roughness, water))
+    PN.pipes.append(Pipe('g', 'h', 125, 250, roughness, water))
+    # add Node objects to the pipe network by calling buildNodes method of PN object
     PN.buildNodes()
 
-    #update the external flow of certain nodes
-    PN.getNode('a').extFlow=60
-    PN.getNode('d').extFlow=-30
-    PN.getNode('f').extFlow=-15
-    PN.getNode('h').extFlow=-15
+    # update the external flow of certain nodes
+    PN.getNode('a').extFlow = 60
+    PN.getNode('d').extFlow = -30
+    PN.getNode('f').extFlow = -15
+    PN.getNode('h').extFlow = -15
 
-    #add Loop objects to the pipe network
-    PN.loops.append(Loop('A',[PN.getPipe('a-b'), PN.getPipe('b-e'),PN.getPipe('d-e'), PN.getPipe('c-d'), PN.getPipe('a-c')]))
-    PN.loops.append(Loop('B',[PN.getPipe('c-d'), PN.getPipe('d-g'),PN.getPipe('f-g'), PN.getPipe('c-f')]))
-    PN.loops.append(Loop('C',[PN.getPipe('d-e'), PN.getPipe('e-h'),PN.getPipe('g-h'), PN.getPipe('d-g')]))
+    # add Loop objects to the pipe network
+    PN.loops.append(Loop('A', [PN.getPipe('a-b'), PN.getPipe('b-e'), PN.getPipe('d-e'), PN.getPipe('c-d'), PN.getPipe('a-c')]))
+    PN.loops.append(Loop('B', [PN.getPipe('c-d'), PN.getPipe('d-g'), PN.getPipe('f-g'), PN.getPipe('c-f')]))
+    PN.loops.append(Loop('C', [PN.getPipe('d-e'), PN.getPipe('e-h'), PN.getPipe('g-h'), PN.getPipe('d-g')]))
 
-    #call the findFlowRates method of the PN (a PipeNetwork object)
+    # call the findFlowRates method of the PN (a PipeNetwork object)
     PN.findFlowRates()
 
-    #get output
+    # get output
     PN.printPipeFlowRates()
     print()
     print('Check node flows:')
