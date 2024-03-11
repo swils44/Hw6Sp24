@@ -1,3 +1,5 @@
+#I used ChatGPT for help. I think this is pretty close to the output. The final output for net flow in the nodes and
+#head loss are 0. I'm assuming this is because the values are extremely small and that they are fairly negligible.
 # region imports
 import numpy as np
 import math
