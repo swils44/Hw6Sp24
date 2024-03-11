@@ -277,7 +277,7 @@ def main():
     print(f"Calculated I:{IVals} A")
 # endregion
 
-# region function calls
+# region function calls#
 if __name__=="__main__":
     main()
 # endregion

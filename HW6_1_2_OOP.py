@@ -68,5 +68,5 @@ def main():
     iVals = net.AnalyzeCircuit()
     print(f"Calculated currents: {iVals}")
 
-if __name__ == "__main__":
+if __name__ == "__main__":#
     main()
