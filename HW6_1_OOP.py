@@ -262,7 +262,7 @@ def main():
     Net.BuildNetworkFromFile('ResistorNetwork.txt')
     #Net.BuildNetworkFromFile('ResistorNetwork_2.txt') #call the function from Net that builds the resistor network from a text file
     IVals = Net.AnalyzeCircuit()
-    print(f"Calculated I:{IVals} A")
+    print(f"Calculated I for 1,2,3:{IVals} A")
 # endregion
 
 # region function calls

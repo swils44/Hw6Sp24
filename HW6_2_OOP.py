@@ -221,11 +221,11 @@ class PipeNetwork():
 
     # region methods/functions
     def findFlowRates(self):
-        '''
+        """
         a method to analyze the pipe network and find the flow rates in each pipe
         given the constraints of: i) no net flow into a node and ii) no net pressure drops in the loops.
         :return: a list of flow rates in the pipes
-        '''
+        """
         # see how many nodes and loops there are, this is how many equation results I will return
         N = len(self.nodes) + len(self.loops)
         # build an initial guess for flow rates in the pipes.
@@ -321,7 +321,7 @@ class PipeNetwork():
 
 # region function definitions
 def main():
-    '''
+    """
     This program analyzes flows in a given pipe network based on the following:
     1. The pipe segments are named by their endpoint node names:  e.g., a-b, b-e, etc.
     2. Flow from the lower letter to the higher letter of a pipe is considered positive.
@@ -334,7 +334,7 @@ def main():
     Step 3: output results
     Step 4: check results against expected properties of zero head loss around a loop and mass conservation at nodes.
     :return:
-    '''
+    """
     # Instantiate a Fluid object to define the working fluid as water
     water = Fluid(mu=0.00089, rho=1000)  # fill in with the properties of water
 

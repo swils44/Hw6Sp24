@@ -24,6 +24,20 @@ class rankine():
         self.state4=None
 
     def calc_efficiency(self):
+        """
+          Calculate the efficiency of the Rankine cycle.
+
+          This method calculates the thermodynamic states at four key points in the Rankine cycle:
+          1. Turbine inlet (either superheated or saturated vapor)
+          2. Turbine exit (two-phase)
+          3. Pump inlet (saturated liquid)
+          4. Pump exit (typically sub-cooled, but estimated as saturated liquid)
+
+          It then computes the turbine work, pump work, heat added, and the overall cycle efficiency.
+
+          Returns:
+              float: The efficiency of the Rankine cycle in percentage.
+          """
         #calculate the 4 states
         #state 1: turbine inlet (p_high, t_high) superheated or saturated vapor
         if(self.t_high==None):
@@ -45,7 +59,9 @@ class rankine():
         return self.efficiency
 
     def print_summary(self):
-
+        """
+        Prints the report
+        """
         if self.efficiency==None:
             self.calc_efficiency()
         print('Cycle Summary for: ', self.name)
@@ -59,6 +75,10 @@ class rankine():
         self.state4.print()
 
 def main():
+    """
+       Test the Rankine cycle calculator by creating an instance of the Rankine class,
+       calculating the efficiency, and printing a summary of the cycle.
+       """
     rankine1 = rankine(p_low=8, p_high=8000, t_high=None, name="Rankine Cycle" )  #instantiate a rankine object to test it.
     #t_high is specified
     #if t_high were not specified, then x_high = 1 is assumed

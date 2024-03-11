@@ -65,7 +65,7 @@ def main():
     net = ResistorNetwork2()
     net.BuildNetworkFromFile('ResistorNetwork_2.txt')
     iVals = net.AnalyzeCircuit()
-    print(f"Calculated currents: {[f'{i:.1f}A' for i in iVals]}")
+    print(f"Calculated currents for 1-5 : {[f'{i:.1f}A' for i in iVals]}")
 
 if __name__ == "__main__":#
     main()
