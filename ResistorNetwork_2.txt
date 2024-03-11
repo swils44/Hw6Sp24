@@ -23,6 +23,11 @@ Name = de
 Resistance = 5
 </Resistor>
 
+<Resistor>
+Name = df
+Resistance = 0
+</Resistor>
+
 <Source>
 Name = ef
 Type = Voltage

@@ -22,11 +22,11 @@ class ResistorNetwork2(ResistorNetwork):
         i0 = [1, 1, 1, 1, 1]  # define an initial guess for the currents in the circuit
         i = fsolve(self.GetKirchoffVals, i0)
         # print output to the screen
-        print("I1 = {:0.1f}".format(i[0]))
-        print("I2 = {:0.1f}".format(i[1]))
-        print("I3 = {:0.1f}".format(i[2]))
-        print("I4 = {:0.1f}".format(i[3]))
-        print("I5 = {:0.1f}".format(i[4]))
+        print("I1 = {:0.1f}A".format(i[0]))
+        print("I2 = {:0.1f}A".format(i[1]))
+        print("I3 = {:0.1f}A".format(i[2]))
+        print("I4 = {:0.1f}A".format(i[3]))
+        print("I5 = {:0.1f}A".format(i[4]))
         return i
 
     def GetKirchoffVals(self, i):
@@ -54,19 +54,18 @@ class ResistorNetwork2(ResistorNetwork):
         # calculate net current into node d
         Node_d_Current = sum([-i[1], i[2], -i[0], i[3]])
 
-        #I_cd = i[0] - i[3]  # I_1 - I_4 in diagram
 
-        KVL = self.GetLoopVoltageDrops()  # two equations here
+        KVL = self.GetLoopVoltageDrops()  # three equations here
         KVL.append(Node_c_Current)  # one equation here
         KVL.append(Node_d_Current)  # one equation here
-        #KVL.append(I_cd-i[2])
+
         return KVL
 
 def main():
     net = ResistorNetwork2()
     net.BuildNetworkFromFile('ResistorNetwork_2.txt')
     iVals = net.AnalyzeCircuit()
-    print(f"Calculated currents: {iVals}")
+    print(f"Calculated currents: {[f'{i:.1f}A' for i in iVals]}")
 
 if __name__ == "__main__":#
     main()
