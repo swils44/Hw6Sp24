@@ -42,7 +42,7 @@ class Node():
         Qtot = self.extFlow  # count the external flow first
         for p in self.pipes:
             # retrieves the pipe flow rate (+) if into node (-) if out of node. see class for pipe.
-            Qtot += p.getFlowIntoNode(self.name)
+            Qtot+=p.getFlowIntoNode(self.name)
         return Qtot
     # endregion
 
@@ -70,9 +70,9 @@ class Loop():
         startNode = self.pipes[0].startNode  # begin at the start node of the first pipe
         for p in self.pipes:
             # calculates the head loss in the pipe considering loop traversal and flow directions
-            phl = p.getFlowHeadLoss(startNode)
+            phl=p.getFlowHeadLoss(startNode)
             deltaP += phl
-            startNode = p.endNode if startNode != p.endNode else p.startNode  # move to the next node
+            startNode=p.endNode if startNode!=p.endNode else p.startNode  # move to the next node
         return deltaP
     # endregion
 
@@ -229,24 +229,23 @@ class PipeNetwork():
         # build an initial guess for flow rates in the pipes.
         # note that I only have 10 pipes, but need 11 variables because of the degenerate node equation at b.
         Q0 = np.full(N, 10)
-
         def fn(q):
             """
-            This is used as a callback for fsolve.  The mass continuity equations at the nodes and the loop equations
-            are functions of the flow rates in the pipes.  Hence, fsolve will search for the roots of these equations
+            This is used as a callback for fsolve. The mass continuity equations at the nodes and the loop equations
+            are functions of the flow rates in the pipes. Hence, fsolve will search for the roots of these equations
             by varying the flow rates in each pipe.
             :param q: an array of flowrates in the pipes + 1 extra value b/c of node b
             :return: L an array containing flow rates at the nodes and  pressure losses for the loops
             """
             # update the flow rate in each pipe object
-            for i, pipe in enumerate(self.pipes):
-                pipe.Q = q[i]  # set volumetric flow rate from input argument q
+            for i in range(len(self.pipes)):
+                self.pipes[i].Q = q[i]  # set volumetric flow rate from input argument q
             # calculate the net flow rate for the node objects
-            # note:  when flow rates in pipes are correct, the net flow into each node should be zero.
+            # note: when flow rates in pipes are correct, the net flow into each node should be zero.
             L = self.getNodeFlowRates()  # call the getNodeFlowRates function of this class
             # calculate the net head loss for the loop objects
             # note: when the flow rates in pipes are correct, the net head loss for each loop should be zero.
-            L.extend(self.getLoopHeadLosses())  # call the getLoopHeadLosses function of this class
+            L += self.getLoopHeadLosses()  # call the getLoopHeadLosses function of this class
             return L
 
         # using fsolve to find the flow rates
@@ -280,23 +279,23 @@ class PipeNetwork():
     def nodeBuilt(self, node):
         # determines if I have already constructed this node object (by name)
         for n in self.nodes:
-            if n.name == node:
+            if n.name==node:
                 return True
         return False
 
     def getNode(self, name):
         # returns one of the node objects by name
         for n in self.nodes:
-            if n.name == name:
+            if n.name==name:
                 return n
 
     def buildNodes(self):
         # automatically create the node objects by looking at the pipe ends
         for p in self.pipes:
-            if not self.nodeBuilt(p.startNode):
+            if not self.nodeBuilt(p.startNode)==False:
                 # instantiate a node object and append it to the list of nodes
                 self.nodes.append(Node(p.startNode, self.getNodePipes(p.startNode)))
-            if not self.nodeBuilt(p.endNode):
+            if not self.nodeBuilt(p.endNode)==False:
                 # instantiate a node object and append it to the list of nodes
                 self.nodes.append(Node(p.endNode, self.getNodePipes(p.endNode)))
 
@@ -331,15 +330,15 @@ def main():
     Step 4: check results against expected properties of zero head loss around a loop and mass conservation at nodes.
     :return:
     '''
-    # instantiate a Fluid object to define the working fluid as water
+    # Instantiate a Fluid object to define the working fluid as water
     water = Fluid(mu=0.00089, rho=1000)  # fill in with the properties of water
 
     roughness = 0.00025  # in meters
 
-    # instantiate a new PipeNetwork object
+    # Instantiate a new PipeNetwork object
     PN = PipeNetwork(fluid=water)  # fill in to create a new PipeNetwork instance with the water fluid
 
-    # add Pipe objects to the pipe network (see constructor for Pipe class)
+    # Add Pipe objects to the pipe network (see constructor for Pipe class)
     PN.pipes.append(Pipe('a', 'b', 250, 300, roughness, water))
     PN.pipes.append(Pipe('a', 'c', 100, 200, roughness, water))
     PN.pipes.append(Pipe('b', 'e', 100, 200, roughness, water))
@@ -351,25 +350,29 @@ def main():
     PN.pipes.append(Pipe('f', 'g', 125, 250, roughness, water))
     PN.pipes.append(Pipe('g', 'h', 125, 250, roughness, water))
 
-    # add Node objects to the pipe network by calling buildNodes method of PN object
+    # Add Node objects to the pipe network by calling buildNodes method of PN object
     PN.buildNodes()
 
-    # update the external flow of certain nodes
+    # Debug print to check if nodes are correctly created
+    print("Nodes in the network:")
+    for node in PN.nodes:
+        print(node.name)
+
+    # Update the external flow of certain nodes
     PN.getNode('a').extFlow = 60
     PN.getNode('d').extFlow = -30
     PN.getNode('f').extFlow = -15
     PN.getNode('h').extFlow = -15
 
-    # add Loop objects to the pipe network
-    PN.loops.append(
-        Loop('A', [PN.getPipe('a-b'), PN.getPipe('b-e'), PN.getPipe('d-e'), PN.getPipe('c-d'), PN.getPipe('a-c')]))
+    # Add Loop objects to the pipe network
+    PN.loops.append(Loop('A', [PN.getPipe('a-b'), PN.getPipe('b-e'), PN.getPipe('d-e'), PN.getPipe('c-d'), PN.getPipe('a-c')]))
     PN.loops.append(Loop('B', [PN.getPipe('c-d'), PN.getPipe('d-g'), PN.getPipe('f-g'), PN.getPipe('c-f')]))
     PN.loops.append(Loop('C', [PN.getPipe('d-e'), PN.getPipe('e-h'), PN.getPipe('g-h'), PN.getPipe('d-g')]))
 
-    # call the findFlowRates method of the PN (a PipeNetwork object)
+    # Call the findFlowRates method of the PN (a PipeNetwork object)
     PN.findFlowRates()
 
-    # get output
+    # Get output
     PN.printPipeFlowRates()
     print()
     print('Check node flows:')
@@ -380,9 +383,5 @@ def main():
     # PN.printPipeHeadLosses()
 
 
-# endregion
-
-# region function calls
 if __name__ == "__main__":
     main()
-# endregion
