@@ -99,7 +99,7 @@ class Pipe():
         self.d = D / 1000.0  # diameter in m
         self.relrough = self.r / self.d  # calculate relative roughness for easy use later
         self.A = math.pi / 4.0 * self.d ** 2  # calculate pipe cross sectional area for easy use later
-        self.Q = 10  # working in units of L/s, just an initial guess
+        self.Q = 0.010  # working in units of L/s, just an initial guess
         self.vel = self.V()  # calculate the initial velocity of the fluid
         self.reynolds = self.Re()  # calculate the initial reynolds number
     # endregion
@@ -188,7 +188,7 @@ class Pipe():
         return self.startNode == node or self.endNode == node
 
     def printPipeFlowRate(self):
-        print('The flow in segment {} is {:0.2f} L/s'.format(self.Name(), self.Q))
+        print('The flow in segment {} is {:0.2f} m^3/s'.format(self.Name(), self.Q))
 
     def getFlowIntoNode(self, n):
         '''
@@ -286,18 +286,21 @@ class PipeNetwork():
     def getNode(self, name):
         # returns one of the node objects by name
         for n in self.nodes:
-            if n.name==name:
+            if n.name == name:
                 return n
+        return None
 
     def buildNodes(self):
-        # automatically create the node objects by looking at the pipe ends
+        # Automatically create the node objects by looking at the pipe ends
         for p in self.pipes:
-            if not self.nodeBuilt(p.startNode)==False:
-                # instantiate a node object and append it to the list of nodes
-                self.nodes.append(Node(p.startNode, self.getNodePipes(p.startNode)))
-            if not self.nodeBuilt(p.endNode)==False:
-                # instantiate a node object and append it to the list of nodes
-                self.nodes.append(Node(p.endNode, self.getNodePipes(p.endNode)))
+            if not self.nodeBuilt(p.startNode):
+                # Instantiate a node object and append it to the list of nodes
+                newNode = Node(p.startNode, self.getNodePipes(p.startNode))
+                self.nodes.append(newNode)
+            if not self.nodeBuilt(p.endNode):
+                # Instantiate a node object and append it to the list of nodes
+                newNode = Node(p.endNode, self.getNodePipes(p.endNode))
+                self.nodes.append(newNode)
 
     def printPipeFlowRates(self):
         for p in self.pipes:
@@ -305,11 +308,11 @@ class PipeNetwork():
 
     def printNetNodeFlows(self):
         for n in self.nodes:
-            print('net flow into node {} is {:0.2f} L/s'.format(n.name, n.getNetFlowRate()))
+            print('net flow into node {} is {:0.2f} m^3/s'.format(n.name, n.getNetFlowRate()))
 
     def printLoopHeadLoss(self):
         for l in self.loops:
-            print('head loss for loop {} is {:0.2f}'.format(l.name, l.getLoopHeadLoss()))
+            print('head loss for loop {} is {:0.2f} m^3/s'.format(l.name, l.getLoopHeadLoss()))
     # endregion
 
 # endregion
@@ -352,11 +355,6 @@ def main():
 
     # Add Node objects to the pipe network by calling buildNodes method of PN object
     PN.buildNodes()
-
-    # Debug print to check if nodes are correctly created
-    print("Nodes in the network:")
-    for node in PN.nodes:
-        print(node.name)
 
     # Update the external flow of certain nodes
     PN.getNode('a').extFlow = 60
