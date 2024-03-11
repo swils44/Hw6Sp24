@@ -24,7 +24,7 @@ Resistance = 5
 </Resistor>
 
 <Source>
-Name = fe
+Name = ef
 Type = Voltage
 Value = 32
 </Source>
@@ -42,5 +42,10 @@ Nodes = a,b,c,d
 
 <Loop>
 Name = L2
-Nodes = c,e,d
+Nodes = c,d,e
+</Loop>
+
+<Loop>
+Name = L3
+Nodes = d,f,e
 </Loop>
