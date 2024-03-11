@@ -19,7 +19,7 @@ class ResistorNetwork2(ResistorNetwork):
         :return: a list of the currents in the resistor network
         """
         # need to set the currents to that Kirchoff's laws are satisfied
-        i0 = [0.1, 0.1, 0.1, 0.1, 0.1]  # define an initial guess for the currents in the circuit
+        i0 = [1, 1, 1, 1, 1]  # define an initial guess for the currents in the circuit
         i = fsolve(self.GetKirchoffVals, i0)
         # print output to the screen
         print("I1 = {:0.1f}".format(i[0]))
@@ -39,27 +39,27 @@ class ResistorNetwork2(ResistorNetwork):
         """
         # set current in resistors in the top loop
         self.GetResistorByName('ad').Current = i[0]  # I_1 in diagram
-        self.GetResistorByName('bc').Current = i[1]  # I_2 in diagram
+        self.GetResistorByName('bc').Current = i[0]  # I_2 in diagram
 
         # set current in resistors in the bottom loop
-        self.GetResistorByName('ce').Current = i[3]  # I_4 in diagram
-        self.GetResistorByName('de').Current = i[4]  # I_5 in diagram
+        self.GetResistorByName('ce').Current = i[4]  # Current 5
+        self.GetResistorByName('de').Current = i[3]  # Current 4
 
         # calculate current through resistor 'cd'
-        self.GetResistorByName('cd').Current = i[0] - i[3]  # I_1 - I_4 in diagram
+        self.GetResistorByName('cd').Current = i[2] # Current 3
 
         # calculate net current into node c
-        Node_c_Current = sum([i[1], -(i[0] - i[3]), -i[3]])
+        Node_c_Current = sum([i[4], -i[2], i[0]])
 
         # calculate net current into node d
-        Node_d_Current = sum([i[0], (i[0] - i[3]), -i[4]])
+        Node_d_Current = sum([-i[1], i[2], -i[0], i[3]])
 
-        I_cd = i[0] - i[3]  # I_1 - I_4 in diagram
+        #I_cd = i[0] - i[3]  # I_1 - I_4 in diagram
 
         KVL = self.GetLoopVoltageDrops()  # two equations here
         KVL.append(Node_c_Current)  # one equation here
         KVL.append(Node_d_Current)  # one equation here
-        KVL.append(I_cd-i[2])
+        #KVL.append(I_cd-i[2])
         return KVL
 
 def main():
@@ -68,5 +68,5 @@ def main():
     iVals = net.AnalyzeCircuit()
     print(f"Calculated currents: {iVals}")
 
-if __name__ == "__main__":
+if __name__ == "__main__":#
     main()
